@@ -12,10 +12,10 @@ architecture tb of siete_segmentos_tb is
     signal Y: std_logic_vector(6 downto 0);
 begin
     
-    DUT : entity sietesegmentos port map (D => D, Y => Y);
+    DUT : entity siete_segmentos port map (D => D, Y => Y);
     stim : process is
     begin
-        for i in 0 to 6 loop
+        for i in 0 to 15 loop
             D <= std_logic_vector(to_unsigned(i, 4));
             wait for 10 ns;
         end loop;
