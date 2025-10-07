@@ -13,7 +13,7 @@ end segundero_tb;
 
 architecture tb of segundero_tb is
     constant divisor: integer := 10;
-    constant periodo: time:= 10 ns;
+    constant periodo: time:= 1 sec / divisor;
     signal nreset, clk: std_logic;
     signal display: std_logic_vector(7 downto 0);
 begin
@@ -31,8 +31,9 @@ begin
     begin
         nreset <= '0';
         wait until rising_edge(clk);
+        wait for periodo/4;
         nreset <= '1';
-        wait for periodo;
+        wait;
     end process;
 
     evaluacion : process
@@ -59,7 +60,7 @@ begin
                 & to_string(display) & " (linea "
                 &integer'image(nr_linea)&" del patron)"
                 severity error;
-            wait for periodo;
+            wait for 1 sec;
         end loop;
         finish;
     end process;

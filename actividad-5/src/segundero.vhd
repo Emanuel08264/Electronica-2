@@ -31,7 +31,7 @@ architecture arch  of segundero is
    
     preload <= std_logic_vector(to_unsigned(divisor-1,24));
 
-    limite <= segundo ?= "1001";
+    limite <= segundo ?= 9;
 
     reset_cuenta <= not nreset or (limite and hab);
 
@@ -39,6 +39,8 @@ architecture arch  of segundero is
                     segundo + 1 when hab else
                     segundo;
                     
-    U2: entity siete_seg port map(segundo => std_logic_vector(segundo), display => display);
-
-end arch;
+    U2: entity siete_seg port map(
+        D => std_logic_vector(segundo),
+        Y => display(6 downto 0));
+        display(7) <= limite;
+    end arch;
