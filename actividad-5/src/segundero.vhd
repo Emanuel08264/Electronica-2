@@ -10,13 +10,14 @@ entity segundero is
     port(
         nreset: in std_logic;
         clk: in std_logic;
-        display: out std_logic_vector(6 downto 0)
+        display: out std_logic_vector(7 downto 0)
     );
 end segundero;
 
 architecture arch  of segundero is
     signal preload: std_logic_vector(23 downto 0);
-    signal segundo ,segundo_sig: unsigned(3 downto 0);
+    signal segundo: unsigned(3 downto 0) := (others => '0');
+    signal segundo_sig: unsigned(3 downto 0);
     signal hab, limite, reset_cuenta: std_logic;
 
     begin
@@ -30,7 +31,7 @@ architecture arch  of segundero is
    
     preload <= std_logic_vector(to_unsigned(divisor-1,24));
 
-    limite <= segundo ?= 9;
+    limite <= segundo ?= "1001";
 
     reset_cuenta <= not nreset or (limite and hab);
 

@@ -24,8 +24,8 @@ begin
         end if;
     end process registro;
 
-cero <= cuenta ?= 0;
-carga <= not nreset or cero;
+cero <= cuenta ?= "0";
+carga <= not nreset or (cero and nreset);
  
 cuenta_sig <= (unsigned(preload)) when carga 
 else cuenta - 1;

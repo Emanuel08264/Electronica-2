@@ -15,7 +15,7 @@ architecture tb of segundero_tb is
     constant divisor: integer := 10;
     constant periodo: time:= 10 ns;
     signal nreset, clk: std_logic;
-    signal display: std_logic_vector(6 downto 0);
+    signal display: std_logic_vector(7 downto 0);
 begin
     dut : entity segundero generic map (divisor => divisor)
         port map (clk => clk, nreset => nreset, display=>display);
@@ -32,7 +32,7 @@ begin
         nreset <= '0';
         wait until rising_edge(clk);
         nreset <= '1';
-        wait for periodo/4;
+        wait for periodo;
     end process;
 
     evaluacion : process
@@ -55,11 +55,11 @@ begin
             end if;
             assert patron = display
                 report "Salida display incorrecta, esperado "
-                & to_string(patron) & "obtenido"
-                & to_string(display) & "(linea "
+                & to_string(patron) & " obtenido "
+                & to_string(display) & " (linea "
                 &integer'image(nr_linea)&" del patron)"
                 severity error;
-            wait for 1 sec;
+            wait for periodo;
         end loop;
         finish;
     end process;
