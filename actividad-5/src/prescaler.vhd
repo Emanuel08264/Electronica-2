@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity prescaler is
     port(
@@ -13,22 +14,22 @@ end prescaler;
 architecture arch  of prescaler is
     signal carga: std_logic;
     signal cero: std_logic;
-    signal cuenta: std_logic_vector(7 downto 0);
-    signal cuenta_sig: std_logic_vector(7 downto 0);
+    signal cuenta: unsigned(23 downto 0);
+    signal cuenta_sig: unsigned(23 downto 0);
 begin
-    registro: process(clk) begin
+    registro: process(clk) 
+    begin
         if rising_edge(clk) then
             cuenta <= cuenta_sig;
         end if;
     end process registro;
 
-cero <= (cuenta ?= 0);
-carga <= (not nreset or cero);
+cero <= cuenta ?= 0;
+carga <= not nreset or cero;
+ 
+cuenta_sig <= (unsigned(preload)) when carga 
+else cuenta - 1;
 
-if(carga = '1') then 
-cuenta_sig <= (preload - 1) else 
-cuenta_sig <= (cuenta - 1)
-end if;
+tc <= cero;
         
 end arch;
-

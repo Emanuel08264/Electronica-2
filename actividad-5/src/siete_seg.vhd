@@ -1,16 +1,16 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity siete_segmentos is
+entity siete_seg is
     port(
-        D: in std_logic_vector(3 downto 0);
-        Y: out std_logic_vector(6 downto 0)
+        segundo: in std_logic_vector(3 downto 0);
+        display: out std_logic_vector(6 downto 0)
     );
-end siete_segmentos;
+end siete_seg;
 
-architecture arch  of siete_segmentos is
+architecture arch  of siete_seg is
 begin
-    with D select Y <=
+    with segundo select display <=
 
     "0111111" when "0000",
     "0000110" when "0001",
