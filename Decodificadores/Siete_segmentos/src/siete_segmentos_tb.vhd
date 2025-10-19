@@ -8,11 +8,9 @@ entity siete_segmentos_tb is
 end siete_segmentos_tb;
 
 architecture tb of siete_segmentos_tb is
-    signal D : std_logic_vector(3 downto 0);
-    signal Y: std_logic_vector(6 downto 0);
-begin
     signal D: std_logic_vector(3 downto 0);
     signal Y: std_logic_vector(6 downto 0);
+begin
 
     DUT : entity siete_segmentos port map (D => D, Y => Y);
     stim : process is

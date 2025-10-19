@@ -1,0 +1,7 @@
+v 4
+file / "C:/Users/Usuario/Documents/GitHub/electronica-2/decodificadores/siete_segmentos/src/siete_segmentos_tb.vhd" "5dce7f6b5c75dc02b914f80103405664340b91f4" "20251007131450.130":
+  entity siete_segmentos_tb at 1( 0) + 0 on 13;
+  architecture tb of siete_segmentos_tb at 10( 167) + 0 on 14;
+file / "C:/Users/Usuario/Documents/GitHub/electronica-2/decodificadores/siete_segmentos/src/siete_segmentos.vhd" "93100b7472b46e2975d30ff8c3b4f69b141c432e" "20251007131449.760":
+  entity siete_segmentos at 1( 0) + 0 on 11;
+  architecture arch of siete_segmentos at 11( 207) + 0 on 12;
