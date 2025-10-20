@@ -7,7 +7,7 @@ entity prescaler is
     generic (
         constant N : integer);
     port(
-        nreset : in std_logic; -- sincrónico
+        nreset : in std_logic; 
         clk    : in std_logic;
         preload: in std_logic_vector (N-1 downto 0);
         tc     : out std_logic
