@@ -39,7 +39,11 @@ architecture arch of controlador_semaforo is
         VERDE_B,
         AMARILLO_B,
         E_PEATON_A,
-        E_PEATON_B
+        E_PEATON_B,
+        EMERG_A,
+        EMERG_B,
+        CANCELA_A,
+        CANCELA_B
     );
     signal est_act, est_sig : t_estado_transito;
 
@@ -52,13 +56,19 @@ architecture arch of controlador_semaforo is
 -- SEÑALES DE COMUNICAICION
     signal hab_1Hz      : std_logic; -- Prescaler
 
-    signal timer_done    : std_logic; -- Salida Z del temporizador
+    signal timer_done  : std_logic; -- Salida Z del temporizador
     signal timer_preload : std_logic_vector(N_TIMER-1 downto 0); -- Entrada P del temporizador
 
     signal pedido_peaton_a : std_logic;
     signal clear_peaton_a  : std_logic;
     signal pedido_peaton_b : std_logic; 
     signal clear_peaton_b  : std_logic;
+
+    signal pedido_emergencia_a : std_logic;
+    signal clear_emergencia_a  : std_logic;
+    signal pedido_emergencia_b : std_logic; 
+    signal clear_emergencia_b  : std_logic;
+    signal reset_emergencia: std_logic;
 
 begin
 
@@ -80,7 +90,8 @@ begin
         reset => not nreset,
         P => timer_preload,
         T => timer_done,
-        Z => open
+        Z => open,
+        reset_emergencia => reset_emergencia
     );
 
 -- CONEXION MAQUINA PEATON
@@ -93,7 +104,7 @@ begin
             confirmacion_peaton => confirmacion_peaton_a, 
             pedido_peaton       => pedido_peaton_a
     );
-    U_Peaton_B : entity work.peaton_fsm
+    U_PEATON_B : entity work.peaton_fsm
         port map (
             clk          => clk,
             nreset       => nreset,
@@ -103,6 +114,25 @@ begin
             pedido_peaton       => pedido_peaton_b       
         );
 
+-- CONEXION MAQUINA EMERGENCIA
+    U_EMERGENCIA_A: entity work.emergencia_fsm
+    port map(
+            clk          => clk,
+            nreset       => nreset,
+            solicitud_emergencia    => solicitud_emergencia_a,  
+            clear_emergencia        => clear_emergencia_a,      
+            confirmacion_emergencia => confirmacion_emergencia_a, 
+            pedido_emergencia       => pedido_emergencia_a
+    );
+    U_EMERGENCIA_B : entity work.emergencia_fsm
+        port map(
+            clk          => clk,
+            nreset       => nreset,
+            solicitud_emergencia    => solicitud_emergencia_b,  
+            clear_emergencia        => clear_emergencia_b,      
+            confirmacion_emergencia => confirmacion_emergencia_b, 
+            pedido_emergencia       => pedido_emergencia_b
+    );
 
 --MAQUINA CONTROL SEMAFORO
 -- REGISTRO
@@ -123,38 +153,66 @@ begin
             if hab_1Hz then
                 case est_act is
                     when VERDE_A =>
-                        if timer_done and pedido_peaton_a then
+                        if pedido_emergencia_a then
+                            est_sig <= EMERG_A;
+                        elsif pedido_emergencia_b then
+                            est_sig <= CANCELA_A;
+                        elsif timer_done and pedido_peaton_a then
                             est_sig <= E_PEATON_A;
                         elsif timer_done and not pedido_peaton_a then 
                             est_sig <= AMARILLO_A;
                         end if;
 
-                    when E_PEATON_A =>
-                         if timer_done then
-                             est_sig <= AMARILLO_A;
-                         end if;
-
                     when AMARILLO_A =>
-                        if timer_done then
+                        if pedido_emergencia_a then
+                            est_sig <= EMERG_A;
+                        elsif timer_done then
                             est_sig <= VERDE_B;
                         end if;
 
-                    when VERDE_B =>
-                        if timer_done and pedido_peaton_b then
-                            est_sig <= E_PEATON_B;
-                        elsif timer_done and not pedido_peaton_b then 
-                            est_sig <= AMARILLO_B;
-                        end if;
-
-                    when E_PEATON_B => 
+                    when E_PEATON_A =>
                          if timer_done then
-                            est_sig <= AMARILLO_B;
+                            est_sig <= AMARILLO_A;
                          end if;
 
+                    when EMERG_A => 
+                        if not pedido_emergencia_a then
+                            est_sig <= AMARILLO_A;
+                        end if;
+
+                    when CANCELA_A =>
+                            est_sig <= AMARILLO_A;
+    
+                    when VERDE_B =>
+                        if pedido_emergencia_b then
+                            est_sig <= EMERG_B;
+                        elsif pedido_emergencia_a then
+                            est_sig <= CANCELA_B;
+                        elsif timer_done and pedido_peaton_b then
+                            est_sig <= E_PEATON_B;
+                        elsif timer_done and not pedido_peaton_a then 
+                            est_sig <= AMARILLO_B;
+                        end if;
+
                     when AMARILLO_B =>
-                        if timer_done then
+                        if pedido_emergencia_b then
+                            est_sig <= EMERG_B;
+                        elsif timer_done then
                             est_sig <= VERDE_A;
                         end if;
+
+                    when E_PEATON_B =>
+                         if timer_done then
+                             est_sig <= AMARILLO_B;
+                         end if;
+
+                    when EMERG_B => 
+                        if not pedido_emergencia_b then
+                            est_sig <= AMARILLO_B;
+                        end if;
+
+                    when CANCELA_B =>
+                            est_sig <= AMARILLO_B;
                     when others =>
                         est_sig <= VERDE_A;
                 end case;
@@ -170,14 +228,18 @@ begin
         transito_a <= ROJO;
         transito_b <= ROJO;
         timer_preload <= (others => '0'); -- Valor por defecto
+
         peaton_a   <= '0';
         peaton_b   <= '0';
         clear_peaton_a <= '0';
         clear_peaton_b <= '0';
-        confirmacion_emergencia_a <= '0';
-        confirmacion_emergencia_b <= '0';
+
+        reset_emergencia <= '0';
+        clear_emergencia_a <= '0';
+        clear_emergencia_b <= '0';
     --CASE
         case est_act is
+
             when VERDE_A =>
                 transito_a <=  VERDE;
                 transito_b <= ROJO;
@@ -191,7 +253,17 @@ begin
                 transito_b <= ROJO;
                 timer_preload <= std_logic_vector(to_unsigned(T_PEATON - 1, N_TIMER));
                 peaton_a <= '1';
-                clear_peaton_a <= '1';         
+                clear_peaton_a <= '1';
+            when EMERG_A => 
+                transito_a <=  VERDE;
+                transito_b <= ROJO;
+                timer_preload <= std_logic_vector(to_unsigned(0, N_TIMER));
+                clear_emergencia_a <= '1';
+            when CANCELA_A => 
+                transito_a <= AMARILLO;
+                transito_b <= ROJO;
+                reset_emergencia <= '1';
+
             when VERDE_B => 
                 transito_a <=  ROJO;
                 transito_b <= VERDE;
@@ -206,6 +278,16 @@ begin
                 timer_preload <= std_logic_vector(to_unsigned(T_PEATON - 1, N_TIMER));
                 peaton_b <= '1';
                 clear_peaton_b <= '1';
+            when EMERG_B => 
+                transito_a <=  ROJO;
+                transito_b <= VERDE;
+                timer_preload <= std_logic_vector(to_unsigned(0, N_TIMER));
+                clear_emergencia_b <= '1';
+            when CANCELA_B => 
+                transito_a <= ROJO;
+                transito_b <= AMARILLO;
+                reset_emergencia <= '1'; 
+
             when others => 
                 null;            
         end case;    

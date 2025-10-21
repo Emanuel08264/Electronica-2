@@ -9,6 +9,8 @@ entity temporizador is
         clk : in std_logic;
         hab : in std_logic;
         reset : in std_logic;
+        reset_emergencia: in std_logic;
+
         P : in std_logic_vector (N-1 downto 0);
         Z : out std_logic;
         T : out std_logic);
@@ -25,7 +27,8 @@ begin
         end if;
     end process;
 
-    D_sig <= (others=>'0') when reset else
+    D_sig <= to_unsigned(1, N) when reset_emergencia else
+            (others=>'0') when reset else
              D when not hab else
              unsigned(P) when Z else
              D - 1;
