@@ -4,7 +4,7 @@ use ieee.std_logic_1164.all;
 entity sumador is
     port(
         A: in std_logic_vector(3 downto 0);
-        B: in std_logic_vector(3 downto 0);;
+        B: in std_logic_vector(3 downto 0);
         Cin: in std_logic;
         S: out std_logic_vector(3 downto 0);
         Cout: out std_logic 
@@ -23,5 +23,4 @@ begin
     end generate;
 
     Cout <= carry(4);
-end arch;
 end;
