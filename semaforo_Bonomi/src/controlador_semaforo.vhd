@@ -54,10 +54,10 @@ architecture arch of controlador_semaforo is
     constant NEGRO : std_logic_vector(1 downto 0) := "00";
 
 -- SEÑALES DE COMUNICAICION
-    signal hab_1Hz      : std_logic; -- Prescaler
+    signal hab_1Hz      : std_logic; 
 
-    signal timer_done  : std_logic; -- Salida Z del temporizador
-    signal timer_preload : std_logic_vector(N_TIMER-1 downto 0); -- Entrada P del temporizador
+    signal timer_done, timer_cero  : std_logic; 
+    signal timer_preload : std_logic_vector(N_TIMER-1 downto 0);
 
     signal pedido_peaton_a : std_logic;
     signal clear_peaton_a  : std_logic;
@@ -90,7 +90,7 @@ begin
         reset => not nreset,
         P => timer_preload,
         T => timer_done,
-        Z => open,
+        Z => timer_cero,
         reset_emergencia => reset_emergencia
     );
 
@@ -176,7 +176,7 @@ begin
                          end if;
 
                     when EMERG_A => 
-                        if not pedido_emergencia_a then
+                        if not pedido_emergencia_a and (timer_done or timer_cero) then
                             est_sig <= AMARILLO_A;
                         end if;
 
@@ -207,7 +207,7 @@ begin
                          end if;
 
                     when EMERG_B => 
-                        if not pedido_emergencia_b then
+                        if not pedido_emergencia_b and (timer_done or timer_cero) then
                             est_sig <= AMARILLO_B;
                         end if;
 

@@ -29,7 +29,7 @@ end top;
 architecture arch of top is
     -- Base de tiempo
     constant N_PRE : integer := 24;
-    constant frecuencia : integer := 12000000;
+    constant frecuencia : integer := 12000000 / 4;
     constant C_PRE : unsigned(N_PRE-1 downto 0) := to_unsigned(frecuencia - 1,N_PRE);
 
     -- Configuración semáforo

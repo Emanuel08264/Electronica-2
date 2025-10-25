@@ -8,5 +8,7 @@
 -- entero: tiempo a mantener el estado, en segundos
 
 0000 30
-0010 40
-0000 100
+0111 40
+0101 30
+0100 50
+0000 300
