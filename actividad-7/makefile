@@ -44,7 +44,7 @@ $(CONTENTFILE): $(SRCFILES) | $(WORKDIR)
 
 $(OUTDIR)/%.ghw: $(CONTENTFILE) | $(OUTDIR)
 	cd $(WORKDIR) && ghdl -m $(VHDLFLAGS) $(*F)
-	cd $(WORKDIR) && ghdl -r $(VHDLFLAGS) $(*F) --wave=../$(OUTDIR)/$(*F).ghw
+	cd $(WORKDIR) && ghdl -r $(VHDLFLAGS) $(*F) --wave=../$(OUTDIR)/$(*F).ghw 2>&1 | tee $(*F).log
 
 $(OUTDIR)/%.bin: $(SRCDIR)/%.pcf $(CONTENTFILE) | $(OUTDIR)
 	cd $(WORKDIR) && ghdl -m $(VHDLFLAGS) $(*F)

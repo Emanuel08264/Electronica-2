@@ -1,0 +1,17 @@
+-- Copiar la secuencia de numeros en los archivos "controlador_semaforo_estimulo.txt"
+-- y "controlador_semaforo_patron.txt" segun corresponda
+
+--Estimulo
+
+0000 30
+0001 40
+0000 100
+
+--Patron
+
+0101000000 50
+1000100001 25
+1001100000 10
+0101000000 50
+1101000000 10
+1000100000 1

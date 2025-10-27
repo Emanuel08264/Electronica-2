@@ -1,0 +1,44 @@
+@startuml
+skinparam componentStyle uml2
+
+' === MAQUINA PRINCIPAL ===
+[controlador_semaforo] as MainFSM
+
+' === SUBMAQUINAS ===
+[U_PRESCALER] as Prescaler
+[U_TEMPORIZADOR] as Temporizador
+[Peaton FSM] as PeatonFSM
+[Emergencia FSM] as EmergFSM
+
+' === ENTRADAS  ===
+() Solicitudes_Peaton_AB
+() Solicitudes_Emergencia_AB
+' === SALIDAS  ===
+() Confirmaciones_Peaton_AB
+() Confirmaciones_Emergencia_AB
+() Luces_Transito_AB
+() Luces_Peaton_AB
+
+' === Conexiones Principales  ===
+MainFSM --> Luces_Transito_AB
+MainFSM --> Luces_Peaton_AB
+
+' === Conexiones Temporización ===
+Prescaler --> MainFSM : hab_1Hz
+MainFSM --> Temporizador : timer_preload
+MainFSM --> Temporizador : reset_emergencia
+Temporizador --> MainFSM : timer_done
+
+' === Conexiones Peatón ===
+Solicitudes_Peaton_AB --> PeatonFSM : solicitud 
+MainFSM --> PeatonFSM : clear_peaton
+PeatonFSM --> Confirmaciones_Peaton_AB : confirmacion
+PeatonFSM --> MainFSM : pedido_peaton
+
+' === Conexiones Emergencia ===
+Solicitudes_Emergencia_AB --> EmergFSM : solicitud 
+MainFSM --> EmergFSM : clear_emergencia
+EmergFSM --> Confirmaciones_Emergencia_AB : confirmacion
+EmergFSM --> MainFSM : pedido_emergencia
+
+@enduml

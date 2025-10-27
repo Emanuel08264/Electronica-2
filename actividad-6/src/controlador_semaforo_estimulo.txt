@@ -6,9 +6,6 @@
 -- Una línea cada X segundos formato <vector> <entero>
 -- vector: solPeatA&solPeatB&solEmerA&solEmerB
 -- entero: tiempo a mantener el estado, en segundos
-
 0000 30
-0111 40
-0101 30
-0100 50
-0000 300
+0001 40
+0000 100

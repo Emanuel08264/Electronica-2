@@ -166,7 +166,9 @@ begin
                     when AMARILLO_A =>
                         if pedido_emergencia_a then
                             est_sig <= EMERG_A;
-                        elsif timer_done then
+                        elsif timer_done and pedido_emergencia_b then
+                            est_sig <= EMERG_B;
+                        elsif timer_done and not pedido_emergencia_b then
                             est_sig <= VERDE_B;
                         end if;
 
@@ -197,7 +199,9 @@ begin
                     when AMARILLO_B =>
                         if pedido_emergencia_b then
                             est_sig <= EMERG_B;
-                        elsif timer_done then
+                        elsif timer_done and pedido_emergencia_a then
+                            est_sig <= EMERG_A;
+                        elsif timer_done and not pedido_emergencia_a then
                             est_sig <= VERDE_A;
                         end if;
 
