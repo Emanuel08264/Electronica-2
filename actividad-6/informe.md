@@ -111,6 +111,8 @@ Se utilizó el banco de pruebas `controlador_semaforo_tb.vhd` proporcionado, el 
 
   Los cambios rapidos que se observan corresponden al paso por los estados CANCELA_A y AMARILLO_A
 
+
+
 ## Conclusiones
 
 En el desarrollo de este proyecto, se consideraron dos enfoques principales para el diseño de la máquina de estado finito (FSM) del controlador de semáforo: una FSM única y una FSM factorizada en submáquinas coordinadas. Si bien una FSM única podría, en teoría, modelar todo el comportamiento, la complejidad inherente a la gestión simultánea de los ciclos normales, las solicitudes de peatones para dos direcciones y las condiciones de emergencia prioritarias haría que el número de estados y la lógica de transición crecieran considerablemente. Esto dificultaría no solo el diseño inicial, sino también la depuración y futuras modificaciones.
