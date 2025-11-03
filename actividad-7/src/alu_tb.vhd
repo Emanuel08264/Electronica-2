@@ -34,8 +34,6 @@ begin
     prueba : process
         file archivo_estimulo : text open read_mode is "../src/alu_tb_datos.txt";
         variable linea_estimulo : line;
-        -- solicitud_peaton_a&solicitud_peaton_b
-        -- &solicitud_emergencia_a&solicitud_emergencia_b
         variable estimulo_A : std_logic_vector (W-1 downto 0);
         variable estimulo_B : std_logic_vector (W-1 downto 0);
         variable estimulo_sel_fn : std_logic_vector (3 downto 0);
