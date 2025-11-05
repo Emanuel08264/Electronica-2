@@ -90,11 +90,13 @@ La simulación de la ALU (alu_tb) contra el Golden Model de C fue exitosa. El ba
 ### 3.3. Implementación en Hardware
 
 El diseño completo (ALU, calculadora, y periféricos) se sintetizó e implementó para la placa edu-ciaa-fpga. El sistema es funcional y opera como se espera.
+
 ---
 
 ## 4. CONCLUSIONES
 
 El desarrollo de esta actividad permitió validar la importancia de la ALU como componente central de un sistema de procesamiento. El enfoque de diseño genérico (W) permitió que la misma entidad alu.vhd se probara en un entorno de simulación (con W=32) y luego se instanciara fácilmente en un diseño de hardware (con W=4). Además, el diseño jerárquico (separando la ALU, los detectores de flanco, los registros y el decodificador) fue fundamental. Esta modularidad simplificó la detección de errores: la ALU se validó de forma aislada antes de integrarla, y los problemas pudieron rastrearse a la lógica de control (calculadora.vhd) o a los modulos secundarios (siete_seg.vhd) de forma independiente.
+
 ---
 
 ## REFERENCIAS
