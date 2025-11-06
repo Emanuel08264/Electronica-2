@@ -1,10 +1,10 @@
 # ACTIVIDAD 7
 
-## UNIDAD ARITMETICA LÓGICA
+## UNIDAD ARITMÉTICA LÓGICA
 
 ### SANTILLAN, ATILIO EMANUEL
 
-### INGENIERIA ELECTRONICA
+### INGENIERÍA ELECTRÓNICA
 
 ### 2025
 
@@ -12,30 +12,32 @@
 
 ## RESUMEN
 
+En este informe se detalla el diseño, validación e implementación de una Unidad Aritmética Lógica (ALU) genérica en VHDL. Primero, la ALU se validó contra un "Golden Model" de referencia en C, superando exitosamente un banco de pruebas automático de más de 10,000 vectores. Posteriormente, esta ALU se instanció (W=4) como el núcleo de una calculadora de 4 bits para la placa edu-ciaa-fpga. El sistema completo, que incluye registros, detectores de flanco y un decodificador de 7 segmentos, fue sintetizado y probado en hardware, demostrando un funcionamiento correcto que cumple con todas las especificaciones.
+
 ---
 
-## 1. INTRODUCCION
+## 1. INTRODUCCIÓN
 
 Se desea diseñar una calculadora que cumpla con las siguientes especificaciones.
 
-- Carga de los numeros de 4 bits A y B.
-- Se debe poder seleccionar la funcion a realizar entre A y B.
-- Al numero A se le asigna el resultado de la operación.
-- La funciones que debe realizar son:
+- Carga de los números de 4 bits A y B.
+- Se debe poder seleccionar la función a realizar entre A y B.
+- Al número A se le asigna el resultado de la operación.
+- Las funciones que debe realizar son:
   - Suma
   - Resta
   - Desplazamiento lógico izquierda
   - Menor con signo
   - Menor sin signo
-  - Desplazamiento aritmetico derecha
+  - Desplazamiento aritmético derecha
   - Desplazamiento lógico derecha
   - OR exclusivo bit a bit
   - OR bit a bit
   - AND bit a bit
-- Para las operaciones _suma, resta, desplazamiento lógico izquierda y menor con signo_ el codigo de entrada se interpreta como **complemento a 2**, mientras que para las demas funciones como **binario natural**.
-- Los dispositivos de entrada a utilizar seran 8 interruptores.
+- Para las operaciones _suma, resta, desplazamiento lógico izquierda y menor con signo_ el código de entrada se interpreta como **complemento a 2**, mientras que para las demás funciones como **binario natural**.
+- Los dispositivos de entrada a utilizar serán 8 interruptores.
 - El dispositivo de salida será un display de 7 segmentos.
-- El codigo de salida será **hexadecimal**.
+- El código de salida será **hexadecimal**.
 
 ---
 
@@ -43,12 +45,11 @@ Se desea diseñar una calculadora que cumpla con las siguientes especificaciones
 
 Para el desarrollo de la calculadora, el diseño se dividió en los siguientes módulos:
 
-
 ### 2.1. Diseño de la ALU (`alu.vhd`)
 
-La La ALU se implementó como una entidad VHDL genérica (`generic (W : positive)`). Para la lógica principal, se uso un proceso combinacional (`process(all)`) con una sentencia `case` que se activa según la entrada `sel_fn` para elegir qué operación realizar. Los codigos de sel_fn para cada función a implementar se detallan en la Tabla 1.
+La ALU se implementó como una entidad VHDL genérica (`generic (W : positive)`). Para la lógica principal, se usó un proceso combinacional (`process(all)`) con una sentencia `case` que se activa según la entrada `sel_fn` para elegir qué operación realizar. Los códigos de sel_fn para cada función a implementar se detallan en la Tabla 1.
 ![Funciones ALU](imagenes/funciones_alu.png "Funciones de la ALU")
-_Tabla 1: Fuciones ALU_
+\_Tabla 1: Funciones ALU\*
 
 Para manejar correctamente las operaciones aritméticas, se crearon señales auxiliares: `SA` y `SB` (para signed) y `UA` y `UB` (para unsigned). Esto permite convertir las entradas A y B al tipo de dato correcto (con o sin signo) según la operación que se estuviera realizando. Por ejemplo, usé SA+SB para la suma, UA < UB para la comparación sin signo, y shift_right(SA,...) para el desplazamiento aritmético.
 
@@ -65,7 +66,7 @@ En cada ciclo, el testbench:
 2.  Aplica los estímulos a la ALU.
 3.  Compara las salidas `Y` y `Z` del DUT con los valores esperados usando `assert`, reportando un error en caso de que no sean iguales.
 
-En la Imagen 1, se puede observar el procedimiento seguido para la deteccion de errores.
+En la Imagen 1, se puede observar el procedimiento seguido para la detección de errores.
 
 ![Golden Model](imagenes/golden_model.png "Golden Model")
 _Imagen 1: Golden Model_
@@ -84,21 +85,24 @@ La calculadora de 4 bits se implementó conectando varios módulos VHDL:
 ## 3. RESULTADOS
 
 ### 3.1. Simulación de la ALU
-La simulación de la ALU (alu_tb) contra el Golden Model de C fue exitosa. El banco de pruebas procesó 10,000 vectores de prueba  sin reportar ningún severity error. Esto valida que el diseño VHDL de la ALU es lógicamente correcto y cumple con todas las especificaciones de la Tabla 1.
-### 3.2. Simulación de Calculadora
 
-### 3.3. Implementación en Hardware
+La simulación de la ALU (alu*tb) contra el Golden Model de C fue exitosa. Como puede observarse en la **Imagen 2** banco de pruebas procesó 10,000 vectores de prueba sin reportar ningún severity error. Esto valida que el diseño VHDL de la ALU es lógicamente correcto y cumple con todas las especificaciones de la Tabla 1.
+![LOG_ALU](imagenes/log_alu.png "LOG_ALU")
+\_Imagen 2: Archivo LOG ALU*
 
-El diseño completo (ALU, calculadora, y periféricos) se sintetizó e implementó para la placa edu-ciaa-fpga. El sistema es funcional y opera como se espera.
+### 3.2. Implementación en Hardware
+
+Como no se realizó un banco de pruebas para calculadora, las pruebas de los resultados se hizo directamente sobre la FPGA. El diseño completo (ALU, calculadora, y periféricos) se implementó con éxito. El sistema es funcional y opera como se espera: los registros A y B se cargan correctamente al detectar el flanco ascendente de los interruptores, la ALU recibe los operandos y el `sel_fn`, y el resultado se visualiza correctamente en el display de 7 segmentos.
 
 ---
 
 ## 4. CONCLUSIONES
 
-El desarrollo de esta actividad permitió validar la importancia de la ALU como componente central de un sistema de procesamiento. El enfoque de diseño genérico (W) permitió que la misma entidad alu.vhd se probara en un entorno de simulación (con W=32) y luego se instanciara fácilmente en un diseño de hardware (con W=4). Además, el diseño jerárquico (separando la ALU, los detectores de flanco, los registros y el decodificador) fue fundamental. Esta modularidad simplificó la detección de errores: la ALU se validó de forma aislada antes de integrarla, y los problemas pudieron rastrearse a la lógica de control (calculadora.vhd) o a los modulos secundarios (siete_seg.vhd) de forma independiente.
+El desarrollo de esta actividad permitió adquirir un primer contacto con una ALU como componente central de un sistema de procesamiento. Por otro lado, el enfoque de diseño genérico, permitió que la misma entidad alu.vhd se probara en un entorno de simulación (con W=32) y luego se instanciara fácilmente en un diseño de hardware (con W=4).
+El diseño jerárquico (separando la ALU, los detectores de flanco, los registros y el decodificador) simplificó la detección de errores: la ALU se validó de forma aislada antes de integrarla, y los problemas pudieron rastrearse a la lógica de control (calculadora.vhd) o a los módulos secundarios (siete_seg.vhd) de forma independiente.
 
 ---
 
 ## REFERENCIAS
 
-_Syncad. (s.f.). Golden reference models. https://www.syncad.com/web_manual_testbencher/test_bench_generator_main_index.html?golden_reference_models.htm_
+_Syncad. (s.f.). Golden reference models. Recuperado el 5 de noviembre de 2025, de https://www.syncad.com/web_manual_testbencher/test_bench_generator_main_index.html?golden_reference_models.htm_
