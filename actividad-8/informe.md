@@ -64,6 +64,8 @@ Las SRAM también se dividen en:
 
 #### RAM Dinámica
 
+Una RAM dinámica
+
 ---
 
 ## MATERIALES Y MÉTODOS
