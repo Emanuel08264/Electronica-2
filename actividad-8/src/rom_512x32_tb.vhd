@@ -17,10 +17,7 @@ architecture tb of rom_512x32_tb is
 begin
     
     dut : entity rom_512x32 generic map (
-       INIT_FILE_B0 => "../src/rom_b0.txt",
-       INIT_FILE_B1 => "../src/rom_b1.txt",
-       INIT_FILE_B2 => "../src/rom_b2.txt",
-       INIT_FILE_B3 => "../src/rom_b3.txt"
+       init_file => "../src/rom_512x32_contenido.txt"
     ) port map(
         clk => clk,
         addr => addr,

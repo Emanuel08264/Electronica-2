@@ -39,8 +39,6 @@ architecture behavioral of ram_512x8 is
                     addr_index := addr_index + 1;
                 end if;
             end loop;
-        else
-            report "No se pudo abrir el archivo de inicialización: " & init_file severity warning;
         end if;
         return ram_data;
     end function init_ram;
