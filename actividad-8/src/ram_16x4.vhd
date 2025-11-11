@@ -4,21 +4,21 @@ use ieee.numeric_std.all;
 use ieee.std_logic_textio.all;
 use std.textio.all;
 
-entity ram_512x8 is
+entity ram_16x4 is
     generic (
         constant init_file : string := ""
     );
     port (
         clk     : in  std_logic;
         we      : in  std_logic;
-        addr    : in  std_logic_vector(8 downto 0);
-        din     : in  std_logic_vector(7 downto 0);
-        dout    : out std_logic_vector(7 downto 0)
+        addr    : in  std_logic_vector(3 downto 0);
+        din     : in  std_logic_vector(3 downto 0);
+        dout    : out std_logic_vector(3 downto 0)
     );
-end entity ram_512x8;
+end entity ram_16x4;
 
-architecture behavioral of ram_512x8 is
-    type ram_type is array (511 downto 0) of std_logic_vector(7 downto 0);
+architecture behavioral of ram_16x4 is
+    type ram_type is array (15 downto 0) of std_logic_vector(3 downto 0);
 
     -- Generar la RAM a partir del archivo de inicialización
 
@@ -39,8 +39,6 @@ architecture behavioral of ram_512x8 is
                     addr_index := addr_index + 1;
                 end if;
             end loop;
-        else
-            report "No se pudo abrir el archivo de inicialización: " & init_file severity warning;
         end if;
         return ram_data;
     end function init_ram;

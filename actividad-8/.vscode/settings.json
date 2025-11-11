@@ -1,9 +1,18 @@
 {
-    "cSpell.language": "es, en",
+    "cSpell.enabled": false,
+    "cSpell.language": "es,en",
     "cSpell.words": [
         "ATILIO",
+        "BRAM",
+        "EEPROM",
         "EMANUEL",
+        "EPROM",
+        "instanciar",
+        "MOSFET",
+        "precarga",
         "SANTILLÁN",
-        "Síncronas"
+        "síncronas",
+        "Síncronas",
+        "VHDL"
     ]
 }

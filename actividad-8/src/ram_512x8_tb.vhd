@@ -18,7 +18,7 @@ architecture tb of ram_512x8_tb is
 begin
     
     dut : entity ram_512x8 generic map (
-        init_file => "../src/ram_512x8_tb_contenido.txt"
+       init_file => "../src/ram_512x8_contenido_tb.txt"
     ) port map(
         clk => clk,
         we => we,
@@ -39,11 +39,11 @@ begin
         variable d : std_logic_vector (7 downto 0);
     begin
         we <= '0';
-        addr <= 9x"0";
-        din <= 8x"0";
+        addr <= 9x"000";
+        din <= 8x"00";
         wait until rising_edge(clk);
         wait for periodo/4;
-        addr <= 9x"8";
+        addr <= 9x"008";
         wait for periodo;
         assert dout = x"6e"
             report "Valor inicial distinto al esperado" severity error;

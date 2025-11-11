@@ -4,25 +4,24 @@ use ieee.numeric_std.all;
 use ieee.std_logic_textio.all;
 use std.textio.all;
 
-entity ram_512x8 is
+entity ram_512x8_dualport is
     generic (
         constant init_file : string := ""
     );
     port (
         clk     : in  std_logic;
         we      : in  std_logic;
-        addr    : in  std_logic_vector(8 downto 0);
+        addr_w    : in  std_logic_vector(8 downto 0);
+        addr_r    : in  std_logic_vector(8 downto 0);
         din     : in  std_logic_vector(7 downto 0);
         dout    : out std_logic_vector(7 downto 0)
     );
-end entity ram_512x8;
+end entity ram_512x8_dualport;
 
-architecture behavioral of ram_512x8 is
+architecture behavioral of ram_512x8_dualport is
     type ram_type is array (511 downto 0) of std_logic_vector(7 downto 0);
 
-    -- Generar la RAM a partir del archivo de inicialización
-
-    impure function init_ram return ram_type is -- El resultado no depende solo de los argumentos
+    impure function init_ram return ram_type is 
         file ram_file : text;
         variable ram_data : ram_type := (others => (others => '0'));
         variable line_content : line;
@@ -34,26 +33,24 @@ architecture behavioral of ram_512x8 is
         if status = open_ok then
             while not endfile(ram_file) loop
                 readline(ram_file, line_content);
-                hread(line_content, ram_data(addr_index), valid);  -- Hex read (lee en hexadecimal, convierte a std_logic_vector, lo guarda en ram_data(addr_index) y devuelve si fue válido)              
+                hread(line_content, ram_data(addr_index), valid);               
                 if valid then
                     addr_index := addr_index + 1;
                 end if;
             end loop;
-        else
-            report "No se pudo abrir el archivo de inicialización: " & init_file severity warning;
         end if;
         return ram_data;
     end function init_ram;
 
-    signal ram : ram_type := init_ram; -- Inicializa la RAM al instanciar la arquitectura
+    signal ram : ram_type := init_ram; 
 begin
     process(clk)
     begin
         if rising_edge(clk) then
             if we = '1' then
-                ram(to_integer(unsigned(addr))) <= din;
+                ram(to_integer(unsigned(addr_w))) <= din;
             end if;
-            dout <= ram(to_integer(unsigned(addr)));
+            dout <= ram(to_integer(unsigned(addr_r)));
         end if;
     end process;
 end architecture behavioral;
