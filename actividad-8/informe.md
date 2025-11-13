@@ -12,13 +12,15 @@
 
 ## RESUMEN
 
+Este trabajo presenta la investigación y el diseño de componentes de memoria síncrona en VHDL. Se realizó una investigación teórica de las tecnologías de almacenamiento, diferenciando las memorias volátiles (SRAM y DRAM) de las no volátiles (ROM, EPROM y FLASH), y se analizó su aplicación en la jerarquía de memoria de un sistema de cómputo (conjunto de registros, caché, memoria principal y almacenamiento). Se investigó la documentación de la FPGA iCE40, identificando los bloques BRAM sysMEM de 512 x 8. Basado en esto, se desarrolló un modelo genérico de memoria síncrona en VHDL capaz de inicializarse desde archivos de texto (hread). Este modelo se adaptó para implementar los tres componentes solicitados: una ROM de 512 x 32, una RAM de 512 x 32 de dos puertos con máscara de escritura por byte, y un conjunto de registros de 32 x 32 de tres puertos. Finalmente, se implementó un sistema que integra una RAM y lógica de control en la FPGA. Todos los módulos fueron validados mediante bancos de prueba automáticos.
+
 ---
 
 ## INTRODUCCIÓN
 
 ### Memorias
 
-Una memoria es una parte del sistema que almacena grandes cantidades de datos binarios. Se conforman de matrices de celdas de almacenamiento (latches o capacitores). En esta matriz, cada celda almacena 1 bit, y se organiza de la siguiente manera:
+Según Floyd (2006), una memoria es una parte del sistema que almacena grandes cantidades de datos binarios. Se conforman de matrices de celdas de almacenamiento (latches o capacitores). En esta matriz, cada celda almacena 1 bit, y se organiza de la siguiente manera:
 
 - Columna: el número de columnas nos indica el ancho de **palabra** (unidad completa de información). En la mayoría de aplicaciones trabajamos con palabras de 8 bits (1 byte), o múltiplos de la misma.
 - Fila: Indican la **dirección** (_address_ en inglés) de cada palabra almacenada por la memoria.
@@ -27,46 +29,46 @@ A la cantidad de bits que puede almacenar una memoria la llamamos capacidad, y e
 
 ![Matriz de memoria](imagenes/matriz.png "Matriz de memoria")
 
-**_Imagen 1_**
+**_Imagen 1_** _Nota. Adaptado de Fundamentos de sistemas digitales, por T. L. Floyd, 2006, Pearson Educación_
 
 Las operaciones básicas que se pueden realizar en una memoria son la **lectura** y **escritura**.
 
 ### Operación de escritura:
 
-Consiste en ingresar una cantidad de datos en una posición específica de la memoria. Para ello, se introduce en el **bus de direcciones** un código almacenado en el **registro de direcciones**, este se decodifica, y selecciona la posición de memoria. La memoria recibe entonces una orden de escritura y los datos almacenados en el **registro de datos** se introducen en el **bus de datos**, y se almacenan en la dirección de memoria especificada. En la **Imagen 2** se ilustra este proceso. Si se repite la operación, el nuevo byte de datos se sobre escribe sobre el anterior, y lo destruye.
+Consiste en ingresar una cantidad de datos en una posición específica de la memoria. Para ello, se introduce en el **bus de direcciones** un código almacenado en el **registro de direcciones**, este se decodifica, y selecciona la posición de memoria. La memoria recibe entonces una orden de escritura y los datos almacenados en el **registro de datos** se introducen en el **bus de datos**, y se almacenan en la dirección de memoria especificada. En la **Imagen 2** se ilustra este proceso. Si se repite la operación, el nuevo byte de datos se sobre escribe sobre el anterior, y lo destruye (Floyd, 2006).
 
 ![Operación de escritura](imagenes/escritura.png "Operación de escritura")
 
-**_Imagen 2_**
+**_Imagen 2_** _Nota. Adaptado de Fundamentos de sistemas digitales, por T. L. Floyd, 2006, Pearson Educación_
 
 ### Operación de lectura:
 
-Consiste en extraer una cantidad de datos de una posición específica de la memoria. Para ello, se introduce en el **bus de direcciones** un código almacenado en el **registro de direcciones**, este se decodifica, y selecciona la posición de memoria. La memoria recibe un orden de lectura y una copia del byte de datos almacenado en la dirección de memoria seleccionada se introduce en el **bus de datos** y se carga en el **registro de datos**.En la **Imagen 3** se ilustra este proceso. Si se repite la operación se conservan el byte almacenado, por lo que la operación de lectura es no destructiva.
+Consiste en extraer una cantidad de datos de una posición específica de la memoria. Para ello, se introduce en el **bus de direcciones** un código almacenado en el **registro de direcciones**, este se decodifica, y selecciona la posición de memoria. La memoria recibe un orden de lectura y una copia del byte de datos almacenado en la dirección de memoria seleccionada se introduce en el **bus de datos** y se carga en el **registro de datos**.En la **Imagen 3** se ilustra este proceso. Si se repite la operación se conservan el byte almacenado, por lo que la operación de lectura es no destructiva (Floyd, 2006).
 
 ![Operación de lectura](imagenes/lectura.png "Operación de lectura")
 
-**_Imagen 3_**
+**_Imagen 3_** _Nota. Adaptado de Fundamentos de sistemas digitales, por T. L. Floyd, 2006, Pearson Educación_
 
 ### 1. Clasificación de memorias
 
 Una memoria **RAM**, (_Random Access Memory_), se caracteriza por demorar el mismo tiempo en acceder a cualquier dirección de memoria, y poder elegirla en cualquier orden, ya sea para lectura o escritura. Una particularidad que tienen, es que pierden la información al desconectar la fuente de alimentación, por lo que se las categoriza como volátiles. Estas se dividen en SRAM (_Static RAM_) y DRAM (_Dynamic RAM_)
-Por otro lado, en las memorias **ROM**, (_Read Only Memory_), los datos se almacenan de forma permanente o semi permanente. Estas también son de acceso aleatorio, pero se solo se realizan operaciones de lectura. Además, estas mantienen los datos aun si se desconecta la alimentación por lo que se categorizan como no volátiles.
+Por otro lado, en las memorias **ROM**, (_Read Only Memory_), los datos se almacenan de forma permanente o semi permanente. Estas también son de acceso aleatorio, pero se solo se realizan operaciones de lectura. Además, estas mantienen los datos aun si se desconecta la alimentación por lo que se categorizan como no volátiles (Floyd, 2006).
 
 ### 1.1. RAM Estática
 
-Las memorias RAM estáticas se caracterizan por utilizar un latch como celda de memoria. Se llaman estáticas, pues cuando se aplica alimentación continua, la celda almacena el bit indefinidamente. En la **Figura 4** , vemos un circuito que simula el comportamiento de la celda de memoria (en la realidad se trata de un arreglo de 6 transistores). Este se constituye por un latch D, cuya habilitación de escritura (C) depende de las señales de control (SEL y WR). Por otro lado, a la salida del latch se conecta a un buffer tri-estado. Este buffer es el que pone el bit almacenado a la salida de la celda, y "abre el circuito" (se pone en Alta Impedancia o Hi-Z) si la celda no está seleccionada.
+Las memorias RAM estáticas se caracterizan por utilizar un latch como celda de memoria. Se llaman estáticas, pues cuando se aplica alimentación continua, la celda almacena el bit indefinidamente. En la **Figura 4** , vemos un circuito que simula el comportamiento de la celda de memoria (en la realidad se trata de un arreglo de 6 transistores). Este se constituye por un latch D, cuya habilitación de escritura (C) depende de las señales de control (SEL y WR). Por otro lado, a la salida del latch se conecta a un buffer tri-estado. Este buffer es el que pone el bit almacenado a la salida de la celda, y "abre el circuito" (se pone en Alta Impedancia o Hi-Z) si la celda no está seleccionada (Floyd, 2006).
 
 ![SRAM_CELL](imagenes/sram_cell.png "SRAM_CELL")
 
-**_Imagen 4_**
+**_Imagen 4_** _Nota. Adaptado de Diseño digital de John Wakerly, 2001._
 
 #### Arquitectura de la Matriz SRAM
 
-Para organizar estas celdas individuales en un bloque de memoria funcional, se utiliza una arquitectura matricial como la que se ve en la **Imagen 5**.
+Según Floyd (2006), para organizar estas celdas individuales en un bloque de memoria funcional, se utiliza una arquitectura matricial como la que se ve en la **Imagen 5**.
 
 ![SRAM_MATRIX](imagenes/sram_matrix.png "SRAM_MATRIX")
 
-**_Imagen 5_**
+**_Imagen 5_** _Nota. Adaptado de Diseño digital de John Wakerly, 2001._
 
 Esta estructura funciona de la siguiente manera:
 
@@ -85,34 +87,34 @@ Las SRAM también se dividen en:
 
 ### 1.2. RAM Dinámica
 
-Una RAM dinámica se caracteriza por utilizar un capacitor y un MOSFET como celda de memoria. La simplicidad de su estructura permite fabricar memorias con una alta densidad de celdas en comparación a las SRAM. La desventaja que presenta es que no puede permanecer cargado un tiempo ilimitado, por la descarga del capacitor. Para solucionar esto, la memoria debe ser "_refrescada_" periódicamente. Como se debe pasar por este proceso, son más lentas que las SRAM.
+Según Wakerly (2001), una RAM dinámica se caracteriza por utilizar un capacitor y un MOSFET como celda de memoria. La simplicidad de su estructura permite fabricar memorias con una alta densidad de celdas en comparación a las SRAM. La desventaja que presenta es que no puede permanecer cargado un tiempo ilimitado, por la descarga del capacitor. Para solucionar esto, la memoria debe ser "_refrescada_" periódicamente. Como se debe pasar por este proceso, son más lentas que las SRAM.
 
 ![DRAM_CELL](imagenes/dram_cell.png "DRAM_CELL")
 
-**_Imagen 6_**
+**_Imagen 6_** _Nota. Adaptado de Diseño digital de John Wakerly, 2001._
 
 En la **Imagen 6** podemos ver la estructura simplificada de la celda. El MOSFET actúa como un interruptor que, al activarse (controlado por word line), conecta el condensador a la bit line. En la operación de escritura un circuito de entrada pone el dato deseado en la línea: un nivel ALTO para un '1' carga el condensador, mientras que un nivel BAJO para un '0' lo descarga. Al desactivar la línea de fila, el transistor se "abre" y la carga (el '1' o '0') queda "atrapada" en el condensador.
 La operación de lectura es más compleja y es destructiva: primero, la línea de bit se precarga a un voltaje intermedio; luego, al activar la word line, el condensador conectado "tira" (pulls) ligeramente de ese voltaje hacia arriba o abajo. Un Amplificador de Sentido (Sense Amplifier) detecta este minúsculo cambio, recupera el '1' o '0', e inmediatamente debe reescribir el valor sólido de nuevo en la celda, ya que la lectura vació la carga original. Este mismo mecanismo de leer y reescribir es el que se utiliza para el refresco: se lee el contenido (ya degradado) en un latch, y luego se reescribe un valor sólido desde ese latch de vuelta a la celda para restaurar su carga.
 
 ### 1.3. ROM de máscara
 
-También denominadas simplemente ROM. La principal diferencia con las memorias antes descritas, es que en estas solo se realizan operaciones de lectura. Las celdas de estas memorias son básicamente un transistor. En la **Imagen 7** podemos ver el esquema de la celda. Estos almacenan un 1 si se conectan a la bit line, o un 0 si están desconectados. Por ello, una vez que se programa la memoria esta no puede cambiarse. Las ROM puede utilizar tablas de búsqueda (LUT, Look-Up Table) para realizar conversiones de códigos y generación de función lógicas.
+También denominadas simplemente ROM. La principal diferencia con las memorias antes descritas, es que en estas solo se realizan operaciones de lectura. Las celdas de estas memorias son básicamente un transistor. En la **Imagen 7** podemos ver el esquema de la celda. Estos almacenan un 1 si se conectan a la bit line, o un 0 si están desconectados. Por ello, una vez que se programa la memoria esta no puede cambiarse. Las ROM puede utilizar tablas de búsqueda (LUT, Look-Up Table) para realizar conversiones de códigos y generación de función lógicas (Floyd, 2006).
 
 ![ROM_CELL](imagenes/rom_cell.png "ROM_CELL")
 
-**_Imagen 7_**
+**_Imagen 7_** _Nota. Adaptado de Fundamentos de sistemas digitales, por T. L. Floyd, 2006, Pearson Educación_
 
 ### 1.4. Memorias PROM
 
-Las PROM funcionan de manera similar a las ROM, pero su contenido no es definido por el usuario, no en el proceso de fabricación. Las celdas que utiliza son hilos de memoria que se funde o queda intacto para representar un 0 o un 1. El proceso de fundición es irreversible; una vez que una PROM ha sido programada no puede cambiarse. En la **Imagen 8** podemos ver un arreglo de celdas para una memoria PROM.
+Las PROM funcionan de manera similar a las ROM, pero su contenido no es definido por el usuario, no en el proceso de fabricación. Las celdas que utiliza son hilos de memoria que se funde o queda intacto para representar un 0 o un 1. El proceso de fundición es irreversible; una vez que una PROM ha sido programada no puede cambiarse. En la **Imagen 8** podemos ver un arreglo de celdas para una memoria PROM (Floyd, 2006).
 
 ![PROM_MATRIX](imagenes/prom_matrix.png "PROM_MATRIX")
 
-**_Imagen 8_**
+**_Imagen 8_** _Nota. Adaptado de Fundamentos de sistemas digitales, por T. L. Floyd, 2006, Pearson Educación_
 
 ### 1.5. Memorias EPROM
 
-Una memoria EPROM es básicamente una memoria PROM re programable. Una EPROM utiliza una matriz NMOSFET con una estructura de puerta aislada. La puerta del transistor aislada no tiene ninguna conexión eléctrica y puede almacenar una carga eléctrica durante un período de tiempo indefinido. Los bits de datos en este tipo de matriz se representan mediante la presencia o ausencia de una carga almacenada en la puerta. El borrado de un bit de datos es un proceso que elimina la carga de la puerta. De acuerdo a la manera en que realizan el borrado de datos se dividen en:
+Según Floyd (2006), una memoria EPROM es básicamente una memoria PROM re programable. Una EPROM utiliza una matriz NMOSFET con una estructura de puerta aislada. La puerta del transistor aislada no tiene ninguna conexión eléctrica y puede almacenar una carga eléctrica durante un período de tiempo indefinido. Los bits de datos en este tipo de matriz se representan mediante la presencia o ausencia de una carga almacenada en la puerta. El borrado de un bit de datos es un proceso que elimina la carga de la puerta. De acuerdo a la manera en que realizan el borrado de datos se dividen en:
 
 - UV EPROM: Se borran los bits almacenados exponiéndolos a luz ultra violeta.
 - EEPROM: Se pueden borrar y programar mediante impulsos eléctricos.
@@ -121,7 +123,7 @@ Una memoria EPROM es básicamente una memoria PROM re programable. Una EPROM uti
 
 ### 1.6. Memorias FLASH
 
-Las memorias flash son memorias de lectura/escritura de alta densidad y no volátiles. Esta alta densidad se consigue en las memorias flash con una célula de almacenamiento compuesta por un único transistor MOS de puerta flotante.
+Según Floyd (2006), las memorias flash son memorias de lectura/escritura de alta densidad y no volátiles. Esta alta densidad se consigue en las memorias flash con una célula de almacenamiento compuesta por un único transistor MOS de puerta flotante.
 Una memoria flash opera mediante tres acciones principales: programación, lectura y borrado.
 
 <u>Programación:</u> Programar una celda es almacenar un '0'. Esto se hace aplicando un voltaje que atrae electrones en la "puerta flotante" de la celda. Las celdas que quedan sin carga representan un '1'.
@@ -136,7 +138,7 @@ Una memoria flash opera mediante tres acciones principales: programación, lectu
 
 ![FLASH_MATRIX](imagenes/flash_matrix.png "FLASH_MATRIX")
 
-**_Imagen 9_**
+**_Imagen 9_** _Nota. Adaptado de Fundamentos de sistemas digitales, por T. L. Floyd, 2006, Pearson Educación_
 
 La **Imagen 9** muestra una matriz simplificada de células de memoria flash. Cuando una celda de una línea de bit dada se activa (un 1 almacenado) durante una operación de lectura, existirá corriente a través de la línea de bit, lo que producirá una caída de tensión a través de la carga activa. Esta caída de tensión se compara con una tensión de referencia mediante un circuito comparador, generándose un nivel de salida que indica que hay un 1. Si hay un 0 almacenado, no hay corriente en la línea de bit o ésta es muy pequeña, generándose un nivel opuesto a la salida del comparador.
 
@@ -146,7 +148,7 @@ En los sistemas de computo, no se utiliza un solo tipo de memoria, cada una es i
 
 ### 2.1. Conjunto de registros
 
-Un conjunto de registros (register file) es un pequeño grupo de registros de alta velocidad que el procesador usa para almacenar las variables temporales con las que está trabajando activamente.
+Según Harris & Harris (2019), un conjunto de registros (register file) es un pequeño grupo de registros de alta velocidad que el procesador usa para almacenar las variables temporales con las que está trabajando activamente.
 
 En lugar de usar flip-flops individuales, se construye como un pequeño arreglo de memoria SRAM porque es una solución más compacta.
 
@@ -158,32 +160,32 @@ Su característica más importante es que es "multiportado", lo que significa qu
 
 ![REGISTER FILE](imagenes/register_file.png "REGISTER FILE")
 
-**_Imagen 10_**
+**_Imagen 10_** _Nota. Adaptado de Digital Design and Computer Architecture, por D. M. Harris y S. L. Harris, 2019_
 
 La ventaja de esta estructura es que el procesador puede, por ejemplo, leer dos registros (como 'A' y 'B') y escribir el resultado de una operación (como 'A+B') en un tercer registro, todo simultáneamente en el mismo ciclo de reloj.
 
 ### 2.2. Memoria Cache
 
 Una de las principales aplicaciones de las memorias SRAM es la implementación de memorias caché en computadoras. La memoria caché es una memoria de alta velocidad y relativamente pequeña que almacena los datos o instrucciones más recientemente utilizados de la memoria principal. Permite que el procesador pueda acceder a la información almacenada, mucho mas rápido que si recurriese a la memoria principal.
-Funciona de la siguiente manera: Una unidad lógica de la computadora llamado "Controlador de cache", realiza una estimación de que direcciones de la memoria principal solicitará el procesador, y mueve el contenido de dichas direcciones a la memoria cache. Si la estimación fue correcta, el procesador tendrá los datos instantáneamente, sino, demorará un tiempo mas hasta rescatarlos de la memoria principal. La **Imagen 11** es un esquema de como se comunican estas memorias. L1 y L2 son ambas memorias caché, pero la diferencia es el orden de prioridad o urgencia de los datos almacenados.
+Funciona de la siguiente manera: Una unidad lógica de la computadora llamado "Controlador de cache", realiza una estimación de que direcciones de la memoria principal solicitará el procesador, y mueve el contenido de dichas direcciones a la memoria cache. Si la estimación fue correcta, el procesador tendrá los datos instantáneamente, sino, demorará un tiempo mas hasta rescatarlos de la memoria principal. La **Imagen 11** es un esquema de como se comunican estas memorias. L1 y L2 son ambas memorias caché, pero la diferencia es el orden de prioridad o urgencia de los datos almacenados (Floyd, 2006).
 
 ![CACHE](imagenes/cache.png "CACHE")
 
-**_Imagen 11_**
+**_Imagen 11_** _Nota. Adaptado de Fundamentos de sistemas digitales, por T. L. Floyd, 2006, Pearson Educación_
 
 ### 2.3. Memoria principal
 
-Esta es la memoria de trabajo principal del sistema (por ejemplo, los 8 GB o 16 GB de RAM en una computadora). La tecnología utilizada casi exclusivamente para esta aplicación es la DRAM. Esto permite una alta densidad de almacenamiento, logrando grandes capacidades a un bajo costo por bit. Aunque la DRAM es más lenta que la SRAM (lo que justifica la existencia de la caché) y es volátil (requiere refresco y pierde datos sin energía), su alta capacidad y bajo costo la hacen la opción ideal para la memoria principal del sistema.
+Esta es la memoria de trabajo principal del sistema (por ejemplo, los 8 GB o 16 GB de RAM en una computadora). La tecnología utilizada casi exclusivamente para esta aplicación es la DRAM. Esto permite una alta densidad de almacenamiento, logrando grandes capacidades a un bajo costo por bit. Aunque la DRAM es más lenta que la SRAM (lo que justifica la existencia de la caché) y es volátil (requiere refresco y pierde datos sin energía), su alta capacidad y bajo costo la hacen la opción ideal para la memoria principal del sistema (Floyd, 2006).
 
 ### 2.4. Memoria de almacenamiento
 
-La memoria de almacenamiento se utiliza para guardar datos a largo plazo. La tecnología principal para esta aplicación es la Memoria FLASH. La característica fundamental que la hace ideal para el almacenamiento es su no volatilidad: a diferencia de SRAM y DRAM, la memoria FLASH retiene los datos permanentemente, incluso cuando se desconecta la fuente de alimentación. Aquí se guardan el sistema operativo, las aplicaciones y los archivos del usuario.
+La memoria de almacenamiento se utiliza para guardar datos a largo plazo. La tecnología principal para esta aplicación es la Memoria FLASH. La característica fundamental que la hace ideal para el almacenamiento es su no volatilidad: a diferencia de SRAM y DRAM, la memoria FLASH retiene los datos permanentemente, incluso cuando se desconecta la fuente de alimentación. Aquí se guardan el sistema operativo, las aplicaciones y los archivos del usuario (Floyd, 2006).
 
 ### 3. Memorias en FPGAs Lattice iCE40
 
 Para este trabajo práctico, se utilizará la FPGA Lattice iCE40. El trabajo exige específicamente usar "elementos BRAM".
 
-Según la guía de uso de memoria para estos dispositivos (Memory Usage Guide for iCE40 Devices), estos bloques de memoria dedicados se llaman sysMEM™ Embedded Block RAM (EBR).Las características clave de estos bloques BRAM son:
+Según la guía de uso de memoria para estos dispositivos (Lattice Semiconductor, 2020), estos bloques de memoria dedicados se llaman sysMEM™ Embedded Block RAM (EBR). Las características clave de estos bloques BRAM son:
 
 **Capacidad:** Cada bloque BRAM individual tiene una capacidad total de 4k bits (4096 bits).
 
@@ -199,24 +201,25 @@ Esta información es crucial, ya que define cómo se deben implementar los compo
 
 ---
 
-## MATERIALES Y MÉTODOS
+## 4. MATERIALES Y MÉTODOS
 
-A continuación se explicará el proceso seguido para describir un arreglo de memoria genérico en VHDL. Este constituirá el modelo en que se basarán las memorias solicitadas en los objetivos siguientes. 
+A continuación se explicará el proceso seguido para describir un arreglo de memoria genérico en VHDL. Este constituirá el modelo en que se basarán las memorias solicitadas en los objetivos siguientes.
 
-### Descripción de la memoria:
+### 4.1. Descripción de la memoria:
 
 Se debe definir la distribución en filas y columnas de la misma. Para ello, en architecture declaramos un tipo de datos, que consiste en una matriz de m filas y n columnas, siendo m la cantidad de direcciones de la memoria, y n el ancho de palabra.
+
 ```vhdl
 architecture behavioral of ram_mxn is
 type ram_type is array (m downto 0) of std_logic_vector(n downto 0);
 ```
 
-### Inicialización de la memoria:
+### 4.2. Inicialización de la memoria:
 
 Se debe debe establecer el contenido por defecto de la memoria, al conectarse a una fuente de alimentación. En esta actividad se solicitó que la inicialización se realice a traves de un archivo de texto. Para leer este archivo y asignárselo a la memoria, se recurrió a la siguiente función:
 
 ```vhdl
-impure function init_ram return ram_type is 
+impure function init_ram return ram_type is
         file ram_file : text;
         variable ram_data : ram_type := (others => (others => '0'));
         variable line_content : line;
@@ -228,7 +231,7 @@ begin
     if status = open_ok then
         while not endfile(ram_file) loop
             readline(ram_file, line_content);
-            hread(line_content, ram_data(addr_index), valid);           
+            hread(line_content, ram_data(addr_index), valid);
             if valid then
                 addr_index := addr_index + 1;
             end if;
@@ -238,15 +241,15 @@ begin
   end function init_ram;
 ```
 
-Esta abre el archivo de inicialización, leer el contenido linea por linea, y asigna a cada fila de de una variable tipo ram_type (descrita en el apartado anterior) el contenido de la linea. Como el contenido del archivo esta en formato hexadecimal, usa la sentencia hread para leer esos datos, convertirlos a std_logic_vector, y recién asignarlos a cada fila. En caso de que el archivo no pueda leerse, se inicializa con todos ceros. Por último, se devuelve la variable ram_data, de tipo ram_type. 
+Esta abre el archivo de inicialización, leer el contenido linea por linea, y asigna a cada fila de de una variable tipo ram_type (descrita en el apartado anterior) el contenido de la linea. Como el contenido del archivo esta en formato hexadecimal, usa la sentencia hread para leer esos datos, convertirlos a std_logic_vector, y recién asignarlos a cada fila. En caso de que el archivo no pueda leerse, se inicializa con todos ceros. Por último, se devuelve la variable ram_data, de tipo ram_type.
 
 Para asignar el contenido del archivo a la memoria que queremos describir se declara e inicializa una señal ram_type en architecture, de la siguiente manera:
+
 ```vhdl
 signal ram : ram_type := init_ram;
 ```
 
-
-### Operaciones de la memoria:
+### 4.3. Operaciones de la memoria:
 
 Una vez la memoria esta inicializada, para realizar operaciones debemos empezar un process que dependa del reloj (pues las memorias que queremos sintetizar son síncronas):
 
@@ -265,17 +268,19 @@ end process;
 
 WE es una señal de control, que nos indica si deseamos escribir la palabra din en dicha dirección. Por otro lado, en cada pulso de reloj estamos leyendo el contenido de la palabra, y asignándolo a dout. Notemos que en caso de que we indique que hay que escribir en ese pulso de reloj, el valor leído en ese instante corresponde al anterior al escrito, debido a los tiempos de propagación implicados. Este tipo de memorias se llaman Read before Write, pues leen el valor anterior al escrito en ese pulso de reloj.
 
-### TestBench
+### 4.4. TestBench
 
+Para cada uno de los módulos de hardware descritos (rom_512x32, ram_512x32_dualport, register_file_32x32 y top), se creó un banco de pruebas VHDL.
 
+El objetivo de estos testbenches es simular el comportamiento del diseño antes de la síntesis, verificando su lógica de forma aislada. Siguiendo el requisito de "bancos de prueba automáticos", se utilizó la sentencia assert para comprobar que los valores de salida coincidieran con los valores esperados en momentos clave de la simulación.
 
 ---
 
-## RESULTADOS
+## 5. RESULTADOS
 
 En esta sección se expondrá la descripción de las memorias solicitadas a partir del modelo genérico y los resultados obtenidos del banco de pruebas.
 
-### ROM de 512x32 sintetizable con elementos BRAM
+### 5.1. ROM de 512x32 sintetizable con elementos BRAM
 
 Para esta memoria se realizó la misma descripción de modelo genérico, pero estableciendo el numero de filas m = 512, y el numero de columnas n = 32. El contenido del archivo de inicialización contenida lineas de 8 dígitos hexadecimales (equivalente a palabras de 32 bits). El principal cambio respecto de memoria genérica, radica en que al ser una memoria ROM, solo realizamos operaciones de lectura. Por lo tanto el proceso de la misma es el siguiente:
 
@@ -287,25 +292,149 @@ begin
     end if;
 end process;
 ```
-### RAM 512x32 dual port con máscara de escritura cada 8 bits.
+
+### 5.2. RAM 512x32 dual port con máscara de escritura cada 8 bits.
 
 Las modificaciones del modelo genérico para esta memoria abarcan los siguientes aspectos:
-- Se distinguieron 2 direcciones, una para lectura addr_r y una para escritura addr_w.
-- Tenemos 4 señales de control de escritura, según byte que se desee escribir.
-Para empezar estos cambios los vemos en la declaraciones
+
+- Se distinguieron 2 direcciones, una para lectura (addr_r) y una para escritura (addr_w).
+- Se reemplazó la señal we única por cuatro señales de habilitación de escritura (we_b0, we_b1, we_b2, we_b3), una para cada byte de la palabra de 32 bits. Esto implementa la máscara de escritura solicitada.
+
+El entity de VHDL resultante es el siguiente:
+
+```vhdl
+
+entity ram_512x32_dualport is
+    generic ( ... );
+    port (
+        clk     : in  std_logic;
+        we_b0   : in  std_logic; -- Máscara para Byte 0
+        we_b1   : in  std_logic; -- Máscara para Byte 1
+        we_b2   : in  std_logic; -- Máscara para Byte 2
+        we_b3   : in  std_logic; -- Máscara para Byte 3
+        addr_w  : in  std_logic_vector(8 downto 0); -- Puerto Addr Escritura
+        addr_r  : in  std_logic_vector(8 downto 0); -- Puerto Addr Lectura
+        din     : in  std_logic_vector(31 downto 0);
+        dout    : out std_logic_vector(31 downto 0)
+    );
+end entity ram_512x32_dualport;
+
+```
+
+El proceso síncrono se modificó para manejar esta lógica. La lectura es idéntica al modelo genérico (pero usando addr_r), mientras que la escritura se segmentó en cuatro bloques condicionales, uno para cada bit de la máscara:
+
+```vhdl
+
+process(clk)
+begin
+    if rising_edge(clk) then
+        -- Lógica de máscara de escritura por byte
+        if we_b0 = '1' then
+            ram(to_integer(unsigned(addr_w)))(7 downto 0) <= din(7 downto 0);
+        end if;
+        if we_b1 = '1' then
+            ram(to_integer(unsigned(addr_w)))(15 downto 8) <= din(15 downto 8);
+        end if;
+        if we_b2 = '1' then
+            ram(to_integer(unsigned(addr_w)))(23 downto 16) <= din(23 downto 16);
+        end if;
+        if we_b3 = '1' then
+            ram(to_integer(unsigned(addr_w)))(31 downto 24) <= din(31 downto 24);
+        end if;
+       
+        -- Lógica de lectura de puerto dual
+        dout <= ram(to_integer(unsigned(addr_r)));
+    end if;
+end process;
+
+```
+
+### 5.3. Conjunto de registros de 32x32 bit de tres puertos
+
+Este componente fue el más particular. Tal como se investigó en la Introducción (Sección 3), los bloques BRAM de la iCE40 solo soportan un máximo de dos puertos. Dado que este componente exige tres puertos (uno de escritura y dos de lectura), no puede ser implementado en los bloques BRAM.
+
+La entidad VHDL describe los 3 puertos:
+
+```vhdl
 
 
+entity register_file_32x32 is
+    port (
+        clk     : in  std_logic;
+        -- Puerto 1: Escritura
+        we      : in  std_logic;
+        addr_w  : in  std_logic_vector(4 downto 0); -- 5 bits (2^5 = 32)
+        din     : in  std_logic_vector(31 downto 0);
+        -- Puerto 2: Lectura A
+        addr_r_a: in  std_logic_vector(4 downto 0);
+        dout_a  : out std_logic_vector(31 downto 0);
+        -- Puerto 3: Lectura B
+        addr_r_b: in  std_logic_vector(4 downto 0);
+        dout_b  : out std_logic_vector(31 downto 0)
+    );
+end entity register_file_32x32;
+
+```
+
+El proceso síncrono maneja las tres operaciones simultáneamente, implementando el comportamiento "Read-Before-Write" donde las lecturas ven el dato antiguo si se lee y escribe en la misma dirección en el mismo ciclo.
+
+```vhdl
+
+process(clk)
+begin
+    if rising_edge(clk) then
+        -- Lógica de Escritura (Puerto 1)
+        if we = '1' then
+            register_f(to_integer(unsigned(addr_w))) <= din;
+        end if;
+        -- Lógica de Lectura (Puertos 2 y 3)
+        dout_a <= register_f(to_integer(unsigned(addr_r_a)));
+        dout_b <= register_f(to_integer(unsigned(addr_r_b)));
+    end if;
+end process;
+
+```
+
+### 5.4. TOP
+
+En el ultimo objetivo, se implementó el sistema completo de la **Imagen 12** en un archivo VHDL top.vhd. Este es un diseño jerárquico que instancia y conecta los siguientes componentes:
+
+<u>ram_16x4:</u> Una instancia de una RAM de 16x4 (basada en el modelo genérico) para actuar como la memoria principal del demostrador.
+
+<u>rise_detect (x2):</u> Dos instancias de un detector de flanco ascendente para convertir las señales de nivel de los "interruptores" (we y addr_sel) en pulsos de un solo ciclo de reloj. Esto permite que MAR y RAM solo capturen el dato en el instante deseado.
+
+<u>MAR (Registro de Dirección):</u> Se implementó un registro síncrono (U_ADD) que solo actualiza la dirección de la RAM (ram_addr) cuando recibe el pulso del detector de flanco rise_addr_sel.
+
+<u>MUX de Salida:</u> Un proceso combinacional (process(all)) que implementa un multiplexor 2 a 1. Este selecciona qué dato se envía al display: el ram_addr (del MAR) o el ram_dout (de la RAM), según el estado de la señal addr_out.
+
+<u>siete_seg:</u> Una instancia del conversor de hexadecimal a 7 segmentos.
+
+![Circuito](imagenes/circuito.png "Circuito")
+
+**_Imagen 12_**
+
+El sistema fue probado tanto en un banco de pruebas automático, como en la misma FPGA, y mostró un correcto funcionamiento.
 
 ---
 
 ## CONCLUSIÓN
 
+El desarrollo de este trabajo práctico permitió consolidar los conocimientos teóricos sobre las tecnologías de memoria y, fundamentalmente, comprender el proceso de descripción de hardware para su implementación en FPGAs.
 
+Se comprobó que un lenguaje HDL (VHDL) no es un lenguaje de programación que define acciones secuenciales, sino un lenguaje descriptivo que modela el comportamiento y la estructura de un sistema digital. La consulta de la documentación técnica de la FPGA iCE40 permitió entender el rol del sintetizador (Yosys).
+
+El código VHDL es una abstracción; es el sintetizador el que debe inferir la intención del diseñador y traducirla a un circuito digital óptimo, seleccionando los componentes físicos y el ruteado correspondiente.El caso de la ROM de 512x32 fue un ejemplo de este proceso. Aunque la memoria se describió como un único array de 32 bits de ancho, el sintetizador Yosys interpretó esta descripción. Basándose en las limitaciones físicas del hardware—que solo posee bloques BRAM de 512x8, determinó que la implementación más óptima era instanciar y conectar cuatro bloques BRAM en paralelo, en lugar de utilizar la lógica distribuida de la FPGA. Este mismo proceso de inferencia se aplicó al conjunto de registros de tres puertos, donde, al no coincidir con la arquitectura de dos puertos del BRAM, el sintetizador optó correctamente por la lógica distribuida.
 
 ---
 
 ## REFERENCIAS
 
+- Floyd, T. L. (2006). _Fundamentos de sistemas digitales_ (9.ª ed.). Pearson Education.
 
+- Wakerly, J. F. (2001). _Diseño digital: principios y prácticas_ (3.ª ed.). Pearson Education.
+
+- Harris, D. M., & Harris, S. L. (2019). _Digital design and computer architecture_, RISC-V edition. Morgan Kaufmann.
+
+- Lattice Semiconductor. (2020). _Memory Usage Guide for iCE40 Devices (FPGA-TN-02002-1.7)_.
 
 ---

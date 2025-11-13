@@ -1,20 +1,21 @@
 {
-    "cSpell.enabled": true,
-    "cSpell.language": "es, en",
-    "cSpell.words": [
-        "ATILIO",
-        "BRAM",
-        "EEPROM",
-        "EMANUEL",
-        "EPROM",
-        "inicialización",
-        "Inicialización",
-        "instanciar",
-        "MOSFET",
-        "precarga",
-        "SANTILLÁN",
-        "síncronas",
-        "Síncronas",
-        "VHDL"
-    ]
+  "cSpell.enabled": true,
+  "cSpell.language": "es, en",
+  "cSpell.words": [
+    "ATILIO",
+    "BRAM",
+    "EEPROM",
+    "EMANUEL",
+    "EPROM",
+    "inicialización",
+    "Inicialización",
+    "instanciar",
+    "MOSFET",
+    "precarga",
+    "SANTILLÁN",
+    "síncronas",
+    "Síncronas",
+    "síncrono",
+    "VHDL"
+  ]
 }
