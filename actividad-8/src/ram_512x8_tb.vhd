@@ -39,11 +39,11 @@ begin
         variable d : std_logic_vector (7 downto 0);
     begin
         we <= '0';
-        addr <= 9x"000";
-        din <= 8x"00";
+        addr <= 9x"0";
+        din <= 8x"0";
         wait until rising_edge(clk);
         wait for periodo/4;
-        addr <= 9x"008";
+        addr <= 9x"8";
         wait for periodo;
         assert dout = x"6e"
             report "Valor inicial distinto al esperado" severity error;

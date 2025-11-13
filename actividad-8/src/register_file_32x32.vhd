@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_textio.all;
 use std.textio.all;
 
-entity register_file is
+entity register_file_32x32 is
     generic (
         constant init_file : string := ""
     );
@@ -21,9 +21,9 @@ entity register_file is
         addr_r_b    : in  std_logic_vector(4 downto 0);
         dout_b    : out std_logic_vector(31 downto 0)
     );
-end entity register_file;
+end entity register_file_32x32;
 
-architecture behavioral of register_file is
+architecture behavioral of register_file_32x32 is
     type register_type is array (31 downto 0) of std_logic_vector(31 downto 0);
 
     impure function init_register return register_type is 
